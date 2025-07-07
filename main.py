@@ -2,20 +2,23 @@ import requests
 import datetime
 import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler, CallbackQueryHandler,
+    ContextTypes
+)
 import openai
 
-# Clés API
-TELEGRAM_TOKEN = "7295542974:AAGIjBZjzktAHBIz0QPlvE-aD3QYUca7yEc"
-OPENAI_API_KEY = "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"
-API_FOOTBALL_KEY = "d537cf906846aee79d1608e6644e5283bfebfd9da3d6f8e9763c6be14832afb0"
+# Clés API (remplace avec les tiennes)
+TELEGRAM_TOKEN = "TON_TOKEN_TELEGRAM"
+OPENAI_API_KEY = "TA_CLE_OPENAI"
+API_FOOTBALL_KEY = "TA_CLE_API_FOOTBALL"
 
 openai.api_key = OPENAI_API_KEY
+ADMIN_ID = 123456789  # Ton ID Telegram ici
+users = set()  # Stockage des utilisateurs
 
-ADMIN_ID = 7295542974
 
-# === MENU ===
-
+# === UI ===
 def build_menu(user_id=None):
     keyboard = [
         [InlineKeyboardButton("📩 Contacter RAZOR", callback_data='contact')],
@@ -29,22 +32,20 @@ def build_menu(user_id=None):
     return InlineKeyboardMarkup(keyboard)
 
 def build_back_menu():
-    return InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Retour au menu principal", callback_data='back')]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Retour", callback_data='back')]])
+
 
 # === API FOOTBALL ===
-
 def get_today_date():
     return datetime.datetime.utcnow().strftime("%Y-%m-%d")
 
 def fetch_matches_today():
     url = f"https://apiv3.apifootball.com/?action=get_events&from={get_today_date()}&to={get_today_date()}&APIkey={API_FOOTBALL_KEY}"
     response = requests.get(url)
-    if response.status_code != 200:
-        return []
-    return response.json()
+    return response.json() if response.status_code == 200 else []
 
-# === OPENAI / RAZOR ===
 
+# === OPENAI ===
 async def generate_pronostic(match):
     prompt = (
         f"Donne un pronostic simple pour ce match :\n"
@@ -63,99 +64,24 @@ async def generate_pronostic(match):
     except Exception as e:
         return f"❌ Erreur lors du pronostic : {str(e)}"
 
-# === Stockage des utilisateurs ===
-users = set()
 
-# === HANDLERS ===
-
-async def show_matches(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.callback_query.edit_message_text("⏳ Chargement des matchs du jour...")
-    matches = fetch_matches_today()
-    if not matches:
-        await update.callback_query.edit_message_text("❌ Aucun match trouvé pour aujourd'hui.", reply_markup=build_back_menu())
-        return
-
-    text = "🔥 *Matchs du jour - Football*\n\n"
-    for m in matches[:10]:
-        text += f"⚽ {m['match_hometeam_name']} vs {m['match_awayteam_name']}\n🕒 {m['match_time']} 📅 {m['match_date']}\n\n"
-
-    await update.callback_query.edit_message_text(text, parse_mode="Markdown", reply_markup=build_back_menu())
-
-async def show_pronostics(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.callback_query.edit_message_text("⏳ Chargement des pronostics Razor...")
-    matches = fetch_matches_today()
-    if not matches:
-        await update.callback_query.edit_message_text("❌ Aucun match trouvé aujourd'hui.", reply_markup=build_back_menu())
-        return
-
-    messages = []
-    for match in matches[:5]:
-        pronostic = await generate_pronostic(match)
-        messages.append(
-            f"⚽ {match['match_hometeam_name']} vs {match['match_awayteam_name']}\n"
-            f"🕒 {match['match_time']} 📅 {match['match_date']}\n"
-            f"🎯 Razor : {pronostic}\n\n"
-        )
-
-    full_message = "🔥 *Pronostics du jour — Football*\n\n" + "".join(messages)
-    await update.callback_query.edit_message_text(full_message, parse_mode="Markdown", reply_markup=build_back_menu())
-
-async def informations_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    texte = (
-        "🔥 Bienvenue sur le bot officiel de RAZOR ! 🔥\n\n"
-        "Bot conçu par RAZOR 🇷🇺, pronostiqueur reconnu 🎯.\n\n"
-        "✨ Codes promo exclusifs :\n"
-        "- 1xBet : 2980\n"
-        "- BetWinner : 2980 ou Razor25\n\n"
-        "Pariez responsablement 🍀"
-    )
-    await update.callback_query.edit_message_text(texte, parse_mode='Markdown', reply_markup=build_back_menu())
-
-async def contacter(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    texte = (
-        "📩 Pour contacter RAZOR :\n\n"
-        "📧 Email : razor@example.com\n"
-        "📱 Telegram : @RazorContact\n\n"
-        "N'hésitez pas à poser vos questions !"
-    )
-    await update.callback_query.edit_message_text(texte, reply_markup=build_back_menu())
-
-async def afficher_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.callback_query.from_user.id
-    if user_id != ADMIN_ID:
-        await update.callback_query.edit_message_text("❌ Statistiques réservées à l'administrateur.", reply_markup=build_back_menu())
-        return
-    text = f"📊 Nombre d'utilisateurs uniques : {len(users)}"
-    await update.callback_query.edit_message_text(text, reply_markup=build_back_menu())
-
-async def quitter(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.callback_query.edit_message_text("Merci d'avoir utilisé le bot. À bientôt !")
+# === Handlers ===
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
+    user_id = update.effective_user.id
     users.add(user_id)
     texte = (
-        "🔥 RAZOR LE RUSSE. 🇷🇺🇷🇺💯💯 PRONOSTICS GRATUITS 💯\n\n"
+        "🔥 RAZOR LE RUSSE. 🇷🇺 PRONOSTICS GRATUITS 💯\n\n"
         "PRONOSTIC 1XBET, BETWINNER\n\n"
-        "On valide les gars 💪🤞🏾☘💰💰💰\n"
-        "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅\n\n"
-        "AVANTAGES DU CODE PROMO 2980 👇\n"
-        "👉 Paris gratuits\n"
-        "👉 Remises sur pertes\n"
-        "👉 Couverture sécurité\n"
-        "👉 Bonus retirables\n"
-        "👉 Retraits élevés\n"
-        "👉 Bonus booster côtes, etc.\n\n"
-        "ACTUALISE TON COMPTE ici 👈"
+        "Code promo 2980 pour bonus exclusifs 👇"
     )
     await update.message.reply_text(texte, reply_markup=build_menu(user_id))
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = query.from_user.id
-    await query.answer()
     data = query.data
-
+    await query.answer()
     users.add(user_id)
 
     if data == 'matchs_du_jour':
@@ -171,20 +97,72 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == 'quit':
         await quitter(update, context)
     elif data == 'back':
-        await query.edit_message_text(
-            "Bienvenue sur le bot de pronostics sportifs ! Que souhaitez-vous faire ?",
-            reply_markup=build_menu(user_id)
-        )
+        await query.edit_message_text("Menu principal :", reply_markup=build_menu(user_id))
     else:
         await query.edit_message_text("Option inconnue. Réessayez.")
 
-# === MAIN (asynchrone et correct) ===
+async def show_matches(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.callback_query.edit_message_text("⏳ Chargement des matchs...")
+    matches = fetch_matches_today()
+    if not matches:
+        await update.callback_query.edit_message_text("❌ Aucun match aujourd'hui.", reply_markup=build_back_menu())
+        return
+
+    text = "🔥 *Matchs du jour - Football*\n\n"
+    for m in matches[:10]:
+        text += f"⚽ {m['match_hometeam_name']} vs {m['match_awayteam_name']}\n🕒 {m['match_time']} 📅 {m['match_date']}\n\n"
+
+    await update.callback_query.edit_message_text(text, parse_mode="Markdown", reply_markup=build_back_menu())
+
+async def show_pronostics(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.callback_query.edit_message_text("⏳ Génération des pronostics...")
+    matches = fetch_matches_today()
+    if not matches:
+        await update.callback_query.edit_message_text("❌ Aucun match aujourd'hui.", reply_markup=build_back_menu())
+        return
+
+    messages = []
+    for match in matches[:5]:
+        pronostic = await generate_pronostic(match)
+        messages.append(
+            f"⚽ {match['match_hometeam_name']} vs {match['match_awayteam_name']}\n"
+            f"🕒 {match['match_time']} 📅 {match['match_date']}\n"
+            f"🎯 Razor : {pronostic}\n\n"
+        )
+
+    final_text = "🔥 *Pronostics du jour*\n\n" + "".join(messages)
+    await update.callback_query.edit_message_text(final_text, parse_mode="Markdown", reply_markup=build_back_menu())
+
+async def informations_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texte = (
+        "🔥 Bienvenue sur le bot RAZOR !\n\n"
+        "📢 Pronostics gratuits tous les jours\n"
+        "🎯 Contact : @RazorContact\n"
+        "💸 Codes promo : 2980"
+    )
+    await update.callback_query.edit_message_text(texte, parse_mode="Markdown", reply_markup=build_back_menu())
+
+async def contacter(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texte = "📩 Contact :\n\n📱 Telegram : @RazorContact\n📧 Email : razor@example.com"
+    await update.callback_query.edit_message_text(texte, reply_markup=build_back_menu())
+
+async def afficher_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.callback_query.from_user.id != ADMIN_ID:
+        await update.callback_query.edit_message_text("❌ Accès réservé à l'administrateur.", reply_markup=build_back_menu())
+        return
+    await update.callback_query.edit_message_text(f"📊 Utilisateurs uniques : {len(users)}", reply_markup=build_back_menu())
+
+async def quitter(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.callback_query.edit_message_text("Merci d’avoir utilisé le bot. À bientôt !")
+
+# === MAIN ===
 
 async def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
-    print("🚀 Bot lancé...")
+
     await app.run_polling()
 
 if __name__ == "__main__":
