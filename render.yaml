@@ -8,3 +8,4 @@ services:
     region: oregon
     plan: free
     autoDeploy: true
+    build: pythonVersion: 3.11.9
