@@ -6,6 +6,7 @@ from telegram.ext import (
     ContextTypes,
 )
 import requests
+import asyncio
 
 SPORTMONKS_TOKEN = "7295542974:AAGIjBZjzktAHBIz0QPlvE-aD3QYUca7yEc"  # Mets ta clé ici
 
@@ -60,6 +61,7 @@ async def pronostic_du_jour(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.edit_message_text(pronostic, parse_mode="Markdown", reply_markup=build_back_menu())
     else:
         await update.callback_query.edit_message_text("❌ Pronostic IA non disponible.", reply_markup=build_back_menu())
+
 async def informations_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texte = (
         "🔥 Bienvenue sur le bot officiel de RAZOR ! 🔥\n\n"
@@ -96,6 +98,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "ACTUALISE TON COMPTE ici 👈"
     )
     await update.message.reply_text(texte, reply_markup=build_menu())
+
 # --- Handler pour gérer les clics sur les boutons ---
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -124,13 +127,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     else:
         await query.edit_message_text("Option inconnue, veuillez réessayer.")
+
 # --- Fonction principale ---
 
-def main():
-    app = ApplicationBuilder().token("7295542974:AAGIjBZjzktAHBIz0QPlvE-aD3QYUca7yEc").build()
+async def main():
+    app = ApplicationBuilder().token(SPORTMONKS_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
-    app.run_polling()
+    await app.run_polling()
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
