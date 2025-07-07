@@ -3,10 +3,10 @@ services:
     name: razor-telegram-bot
     env: python
     region: frankfurt
-    buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
     plan: free
     autoDeploy: true
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
     envVars:
       - key: TELEGRAM_TOKEN
         value: 7295542974:AAGIjBZjzktAHBIz0QPlvE-aD3QYUca7yEc
