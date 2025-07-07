@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: razor-telegram-bot
+    env: python
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: TELEGRAM_TOKEN
+        value: 7295542974:AAGIjBZjzktAHBIz0QPlvE-aD3QYUca7yEc
+      - key: OPENAI_API_KEY
+        value: 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
+      - key: API_FOOTBALL_KEY
+        value: d537cf906846aee79d1608e6644e5283bfebfd9da3d6f8e9763c6be14832afb0
