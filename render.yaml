@@ -2,7 +2,6 @@ services:
   - type: web
     name: borel-dev
     env: python
-    runtime: python
     buildCommand: ""
     startCommand: python main.py
     branch: main
