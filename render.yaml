@@ -1,11 +1,9 @@
 services:
   - type: web
-    name: borel-dev
+    name: mon-super-bot
     env: python
-    buildCommand: ""
-    startCommand: python main.py
-    branch: main
-    region: oregon
-    plan: free
-    autoDeploy: true
-    build: pythonVersion: 3.11.9
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11 # Ou la version de Python que vous préférez (ex: 3.12.0)
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py # ou votre commande de démarrage
