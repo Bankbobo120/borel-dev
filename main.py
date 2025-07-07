@@ -12,7 +12,7 @@ API_FOOTBALL_KEY = "d537cf906846aee79d1608e6644e5283bfebfd9da3d6f8e9763c6be14832
 
 openai.api_key = OPENAI_API_KEY
 
-ADMIN_ID = 7295542974  # Ton ID Telegram
+ADMIN_ID = 7295542974
 
 # === MENU ===
 
@@ -43,7 +43,7 @@ def fetch_matches_today():
         return []
     return response.json()
 
-# === OPENAI ===
+# === OPENAI / RAZOR ===
 
 async def generate_pronostic(match):
     prompt = (
@@ -178,13 +178,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await query.edit_message_text("Option inconnue. Réessayez.")
 
-# === MAIN ===
+# === MAIN (asynchrone et correct) ===
 
-def main():
+async def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
-    app.run_polling()
+    print("🚀 Bot lancé...")
+    await app.run_polling()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
