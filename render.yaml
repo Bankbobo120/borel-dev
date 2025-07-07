@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: razor-bot
+    name: borel-dev
     env: python
     runtime: python
     buildCommand: ""
