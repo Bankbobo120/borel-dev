@@ -7,7 +7,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 # --- CONFIG ---
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "7295542974:AAGIjBZjzktAHBIz0QPlvE-aD3QYUca7yEc")
 API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "d537cf906846aee79d1608e6644e5283bfebfd9da3d6f8e9763c6be14832afb0")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))
+ADMIN_ID = int(os.getenv("ADMIN_ID", "7745293166"))
 
 # --- DONNEES ---
 users = set()
@@ -77,7 +77,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     users.add(user_id)
     await update.message.reply_text(
-        "🦅 <b>RAZOR LE RUSSE OFFICIEL</b> 🦅\n\n"
+        "🦅 <b>RAZOR LE RUSSE OFFICIEL 🇷🇺💯</b> 🦅\n\n"
+        "🦅 <b>RAZOR CODE PROMO 1XBET => VS75</b> 🦅\n\n"
+        "🦅 <b>RAZOR CODE PROMO BETWINER 1RAZOR</b> 🦅\n\n"
         "💎 <i>Pronostics Premium Gratuits</i>\n\n"
         "👇 <b>UTILISEZ LE MENU CI-DESSOUS</b> 👇",
         parse_mode='HTML',
