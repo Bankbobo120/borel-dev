@@ -9,7 +9,7 @@ from aiohttp import web
 
 # --- CONFIG ---
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "7295542974:AAGIjBZjzktAHBIz0QPlvE-aD3QYUca7yEc")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
 API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "d537cf906846aee79d1608e6644e5283bfebfd9da3d6f8e9763c6be14832afb0")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))  # Ton ID Telegram
 
