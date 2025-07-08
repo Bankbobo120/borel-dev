@@ -5,7 +5,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 TELEGRAM_TOKEN = "7295542974:AAGIjBZjzktAHBIz0QPlvE-aD3QYUca7yEc"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Bonjour 👋")
+    await update.message.reply_text("Bonjour borel👋")
 
 async def run_bot():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
