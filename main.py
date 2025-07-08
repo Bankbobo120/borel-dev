@@ -9,7 +9,7 @@ from aiohttp import web
 
 # --- CONFIG ---
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "7295542974:AAGIjBZjzktAHBIz0QPlvE-aD3QYUca7yEc")
-DEESEEK_API_KEY = os.getenv("DEESEEK_API_KEY", "sk-ad69ead2e9924b56877caf184c89affc")
+DEESEEK_API_KEY = os.getenv("DEESEEK_API_KEY", "sk-8fc06b6fc4f944dbbaba444e22b7dbff")
 API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "d537cf906846aee79d1608e6644e5283bfebfd9da3d6f8e9763c6be14832afb0")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))  # Ton ID Telegram
 
