@@ -194,36 +194,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await query.edit_message_text("Option inconnue. Réessayez.")
 
-# --- Serveur Web (keep alive Render) ---
+# --- NOUVEAU HANDLER /stats ---
 
-async def handle_web(request):
-    return web.Response(text="Bot RAZOR est en ligne. ⚡️")
-
-async def run_webserver():
-    port = int(os.environ.get("PORT", 8000))
-    app = web.Application()
-    app.router.add_get('/', handle_web)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', port)
-    await site.start()
-    print(f"🌐 Serveur web lancé sur le port {port}")
-
-# --- MAIN ---
-
-async def run_bot():
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling()
-    print("✅ Bot lancé.")
-    # Ne jamais terminer pour que le bot reste actif
-    await asyncio.Event().wait()
-
-async def main():
-    await asyncio.gather(run_bot(), run_webserver())
-
-if __name__ == "__main__":
-    asyncio.run(main())
+async def command_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    if user_id != ADMIN
