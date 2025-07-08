@@ -1,18 +1,15 @@
 import os
 import datetime
 import requests
-import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
-from aiohttp import web
 
 # --- CONFIG ---
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "7295542974:AAGIjBZjzktAHBIz0QPlvE-aD3QYUca7yEc")
 API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY", "d537cf906846aee79d1608e6644e5283bfebfd9da3d6f8e9763c6be14832afb0")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "7745293166"))
-PORT = int(os.getenv("PORT", 10000))  # SEULE MODIFICATION REQUISE
 
-# --- DONNÉES ---
+# --- DONNEES ---
 users = set()
 historique_pronos = {}
 team_stats = {}
@@ -76,27 +73,14 @@ def get_today_matches():
         print(f"⚠️ Erreur API Football: {e}")
         return []
 
-# --- SERVEUR WEB POUR RENDER ---
-async def handle(request):
-    return web.Response(text="🤖 Bot Razor en ligne")
-
-async def run_webserver():
-    app = web.Application()
-    app.router.add_get("/", handle)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", PORT)
-    await site.start()
-    print(f"✅ Serveur web actif sur port {PORT}")
-
 # --- HANDLERS ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     users.add(user_id)
     await update.message.reply_text(
-        "🦅 <b>RAZOR PRONOSTICS PREMIUM</b> 🦅\n\n"
-        "🇷🇺 <i>Le Russe qui fait gagner</i>\n\n"
-        "👇 <b>MENU PRINCIPAL</b> 👇",
+        "🦅 <b>RAZOR LE RUSSE OFFICIEL</b> 🦅\n\n"
+        "💎 <i>Pronostics Premium Gratuits</i>\n\n"
+        "👇 <b>UTILISEZ LE MENU CI-DESSOUS</b> 👇",
         parse_mode='HTML',
         reply_markup=build_menu(user_id)
     )
@@ -193,27 +177,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == 'quit':
         await quitter(update, context)
     elif data == 'back':
-        await query.edit_message_text(
-            "🦅 <b>MENU PRINCIPAL</b> 🦅\n\n"
-            "Sélectionnez une option:",
-            parse_mode='HTML',
-            reply_markup=build_menu(user_id)
-        )
+        await start(update, context)
     else:
         await query.edit_message_text("⚠️ Commande inconnue")
 
 # --- LANCEMENT ---
-async def main():
-    # Démarrer le serveur web
-    await run_webserver()
-    
-    # Démarrer le bot Telegram
+def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+    
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
     
     print("🦅 RAZOR BOT ACTIF 🦅")
-    await app.run_polling()
+    app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
