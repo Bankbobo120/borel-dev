@@ -58,6 +58,8 @@ def build_menu(user_id=None):
         [InlineKeyboardButton("📩 Contacter RAZOR", callback_data='contact')],
         [InlineKeyboardButton("📅 Matchs du jour", callback_data='matchs_du_jour')],
         [InlineKeyboardButton("🔥 Pronostic du jour", callback_data='pronostics')],
+        [InlineKeyboardButton("🏆 Matchs grands championnats", callback_data='matchs_grands_championnats')],
+        [InlineKeyboardButton("🔥 Pronostics grands championnats", callback_data='pronostics_grands_championnats')],
         [InlineKeyboardButton("ℹ️ Infos bot", callback_data='infos')],
     ]
     if user_id == ADMIN_ID:
@@ -69,6 +71,69 @@ def build_back_menu():
     return InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Retour au menu principal", callback_data='back')]])
 
 # --- FOOTBALL API ---
+
+def fetch_matches_grands_championnats():
+    grands_championnats_ids = {
+        "Premier League": 148,
+        "La Liga": 237,
+        "Serie A": 135,
+        "Bundesliga": 195,
+        "Ligue 1": 176,
+    }
+    matches_by_league = {}
+
+    for league_name, league_id in grands_championnats_ids.items():
+        url = (
+            f"https://apiv3.apifootball.com/?action=get_events&league_id={league_id}"
+            f"&from={get_today_date()}&to={get_today_date()}&APIkey={API_FOOTBALL_KEY}"
+        )
+        try:
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and data:
+                    matches_by_league[league_name] = data[:3]  # max 3 matchs par ligue
+        except Exception:
+            continue
+    return matches_by_league
+
+
+async def show_matches_grands_championnats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.callback_query.edit_message_text("⏳ Chargement des matchs grands championnats...")
+    matches_by_league = fetch_matches_grands_championnats()
+    if not matches_by_league:
+        await update.callback_query.edit_message_text("❌ Aucun match trouvé pour les grands championnats aujourd'hui.", reply_markup=build_back_menu())
+        return
+
+    text = "🏆 *Matchs Grands Championnats - Football*\n\n"
+    for league, matches in matches_by_league.items():
+        text += f"🔹 *{league}*\n"
+        for m in matches:
+            text += f"⚽ {m['match_hometeam_name']} vs {m['match_awayteam_name']}\n🕒 {m['match_time']} 📅 {m['match_date']}\n\n"
+
+    await update.callback_query.edit_message_text(text, parse_mode="Markdown", reply_markup=build_back_menu())
+
+
+async def show_pronostics_grands_championnats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.callback_query.edit_message_text("⏳ Chargement des pronostics grands championnats...")
+    matches_by_league = fetch_matches_grands_championnats()
+    if not matches_by_league:
+        await update.callback_query.edit_message_text("❌ Aucun match trouvé pour les grands championnats aujourd'hui.", reply_markup=build_back_menu())
+        return
+
+    messages = []
+    for league, matches in matches_by_league.items():
+        messages.append(f"🔹 *{league}*\n")
+        for match in matches:
+            pronostic = await generate_pronostic(match)
+            messages.append(
+                f"⚽ {match['match_hometeam_name']} vs {match['match_awayteam_name']}\n"
+                f"🕒 {match['match_time']} 📅 {match['match_date']}\n"
+                f"🎯 Razor : {pronostic}\n\n"
+            )
+    full_message = "🔥 *Pronostics Grands Championnats — Football*\n\n" + "".join(messages)
+    await update.callback_query.edit_message_text(full_message, parse_mode="Markdown", reply_markup=build_back_menu())
+
 
 def get_today_date():
     return datetime.datetime.utcnow().strftime("%Y-%m-%d")
@@ -183,6 +248,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await show_matches(update, context)
     elif data == 'pronostics':
         await show_pronostics(update, context)
+    elif data == 'matchs_grands_championnats':
+        await show_matches_grands_championnats(update, context)
+    elif data == 'pronostics_grands_championnats':
+        await show_pronostics_grands_championnats(update, context)
     elif data == 'infos':
         await informations_bot(update, context)
     elif data == 'contact':
